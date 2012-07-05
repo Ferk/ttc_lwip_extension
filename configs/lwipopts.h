@@ -1,0 +1,1 @@
+/home/ferk/eth_soundcard/example_lwip/extensions.local/changes/Template/configs/lwipopts.h
