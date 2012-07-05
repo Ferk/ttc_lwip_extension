@@ -13,6 +13,8 @@
 #include "ttc_gpio.h"
 #include "ttc_basic.h"
 
+#include "stm32_eth.h"
+
 /* void Reset_Handler() {
   // write your own reset-handler here...
   
@@ -25,11 +27,21 @@ void NMI_Handler() {
   
   Assert(0, ec_UNKNOWN);
 }
-void HardFault_Handler() {
-  // call your interrupt-handler right here, or else ...
-  
-  
-  Assert(0, ec_UNKNOWN);
+void HardFault_Handler(unsigned int * hardfault_args)
+{
+  u16_t R0 =  ((u16_t) hardfault_args[0]);
+  u16_t R1 =  ((u16_t) hardfault_args[1]);
+  u16_t R2 =  ((u16_t) hardfault_args[2]);
+  u16_t R3 =  ((u16_t) hardfault_args[3]);
+  u16_t R12 = ((u16_t) hardfault_args[4]);
+  u16_t LR =  ((u16_t) hardfault_args[5]);
+  u16_t PC =  ((u16_t) hardfault_args[6]);
+  u16_t PSR = ((u16_t) hardfault_args[7]);
+
+  ((void) (R0+R1+R2+R3+R12+LR+PC+PSR)); // unused vars
+    
+  /* Go to infinite loop when Hard Fault exception occurs */
+  Assert(0,0);
 }
 void MemManage_Handler() {
   // call your interrupt-handler right here, or else ...
@@ -403,11 +415,19 @@ void ETH_IRQHandler() {
   extern ttc_Port_t Led1Port;
   ttc_portSet(&Led1Port);
 #endif /* TTC_LED2 */
+
   mSleep(1000);
+
+  /* Clear the Eth DMA Rx IT pending bits */
+  ETH_DMAClearITPendingBit(ETH_DMA_IT_R);
+  ETH_DMAClearITPendingBit(ETH_DMA_IT_NIS);
+
 #ifdef TTC_LED2
   ttc_portClr(&Led1Port);
 #endif /* TTC_LED2 */
   mSleep(500);
+
+
 }
 void ETH_WKUP_IRQHandler() {
   // call your interrupt-handler right here, or else ...
