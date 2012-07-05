@@ -1,0 +1,46 @@
+#{ EXTENSION_700_extra_settings
+#                               ToolChain_STM32
+#
+#                         Extension to central makefile
+#
+#                                  Project
+#                               test_eth
+#
+#                               written by 
+#                            Fer
+#
+
+# Who did it?
+NAME   = test_eth
+AUTHOR = Fer
+
+# can be checked via #ifdef from makefiles
+EXTENSION_700_extra_settings = 1
+
+# can be checked via #ifdef from c-code
+COMPILE_OPTS += -DEXTENSION_700_extra_settings
+
+# Every extra folder containing header files must be added to INCLUDE_DIRS
+# E.g.: INCLUDE_DIRS += -I cool_library/includes/
+
+# INCLUDE_DIRS += -I
+
+
+
+# Every .c/.cpp file that is to be compiled has to add an .o file to MAIN_OBJS
+# E.g.: MAIN_OBJS += sample.o
+
+MAIN_OBJS += stm32f10x_it.o  # configs/stm32f10x_it.c provides individual reset-handlers
+MAIN_OBJS += stm32_eth.o #system_stm32f10x.o
+
+
+# Every folder containing .c/.cpp files to be compiled must be added to vpath %.c
+# E.g.: vpath %.c cool_library/sources/
+
+# vpath %.c
+
+# You may add precompiled static libraries here
+
+# LD_LIBS +=
+
+#}EXTENSION_700_extra_settings

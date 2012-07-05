@@ -1,0 +1,150 @@
+#{ EXTENSION_100_board_test_eth
+#                               ToolChain_STM32
+#
+#                         Extension to central makefile
+#
+# Use this file to describe your individual board.
+# Make sure to enable only one board in extensions.active/
+#
+#                                  Project
+#                               test_eth
+#
+#                               written by 
+#                            Fer
+#
+EXTENSION_100_board_test_eth = 1
+COMPILE_OPTS += -EXTENSION_100_board_test_eth=1
+BOARD          = 100_board_test_eth
+
+# activate certain parts of source-code
+COMPILE_OPTS += -DEXTENSION_100_board_test_eth
+COMPILE_OPTS += -DBOARD=$(BOARD)
+
+# activate only one uC!
+# - Low-density devices are STM32F101xx, STM32F102xx and STM32F103xx microcontrollers
+#   where the Flash memory density ranges between 16 and 32 Kbytes.
+# - Low-density value line devices are STM32F100xx microcontrollers where the Flash
+#   memory density ranges between 16 and 32 Kbytes.
+# - Medium-density devices are STM32F101xx, STM32F102xx and STM32F103xx microcontrollers
+#   where the Flash memory density ranges between 64 and 128 Kbytes.
+# - Medium-density value line devices are STM32F100xx microcontrollers where the
+#   Flash memory density ranges between 64 and 128 Kbytes.
+# - High-density devices are STM32F101xx and STM32F103xx microcontrollers where
+#   the Flash memory density ranges between 256 and 512 Kbytes.
+# - High-density value line devices are STM32F100xx microcontrollers where the
+#   Flash memory density ranges between 256 and 512 Kbytes.
+# - XL-density devices are STM32F101xx and STM32F103xx microcontrollers where
+#   the Flash memory density ranges between 512 and 1024 Kbytes.
+# - Connectivity line devices are STM32F105xx and STM32F107xx microcontrollers.
+#
+# Examples for some prototype boards
+# Olimex STM32-P107  DSTM32F10X_HD
+# Olimex STM32-H107  DSTM32F10X_HD
+# Olimex STM32-LCD   DSTM32F10X_CL
+#
+#STM32F10X_LD   = 1       # Low density devices
+#STM32F10X_LD_VL= 1       # Low density Value Line devices
+#STM32F10X_MD   = 1       # Medium density devices
+#STM32F10X_MD_VL= 1       # Medium density Value Line devices
+#STM32F10X_HD   = 1       # High density devices
+#STM32F10X_HD_VL= 1       # High density value line devices
+#STM32F10X_XL   = 1       # XL-density devices
+#STM32F10X_CL   = 1       # Connectivity line devices
+
+
+# COMPILE_OPTS += -DuCONTROLLER=$(uCONTROLLER)
+
+# Note: Make sure to set correct sizes for RAM and Flash
+# Example for stm32f10x
+COMPILE_OPTS += -DRAM_SIZE_K=48
+COMPILE_OPTS += -DRAM_START=0x20000000    # all stm32 uCs have same start address  
+COMPILE_OPTS += -DFLASH_SIZE_K=128
+COMPILE_OPTS += -DFLASH_START=0x08000000  # all stm32 uCs have same start address
+
+# set some well known port defines
+# Note: Using the Constant names listed here makes it easier to reuse example code! 
+
+# LED-pins (push pull output)
+# COMPILE_OPTS += -DTTC_LED1=GPIOD,0
+# COMPILE_OPTS += -DTTC_LED2=GPIOD,1
+# ...
+
+# Switches (input with pull up resistor)
+# COMPILE_OPTS += -DTTC_SWITCH1=GPIOC,12   # press button switch 1 (named Tamper)
+# COMPILE_OPTS += -DTTC_SWITCH2=GPIOA,0    # press button switch 2 (named WKUP)
+
+#{ USART1 - define serial port #1
+#  COMPILE_OPTS += -DTTC_USART1=USART2       # internal device being used for this serial port
+#  COMPILE_OPTS += -DTTC_USART1_TX=GPIOA,1   # uC sends out serial sata on this pin
+#  COMPILE_OPTS += -DTTC_USART1_RX=GPIOA,2   # uC reads in serial sata on this pin
+#  COMPILE_OPTS += -DTTC_USART1_RTS=GPIOA,1  # 
+#  COMPILE_OPTS += -DTTC_USART1_CTS=GPIOA,0  # 
+#}USART1
+#{ USART2 - define serial port #2
+#  COMPILE_OPTS += -DTTC_USART2=             # internal device being used for this serial port
+#  COMPILE_OPTS += -DTTC_USART2_TX=          # 
+#  COMPILE_OPTS += -DTTC_USART2_RX=          # 
+#  COMPILE_OPTS += -DTTC_USART2_RTS=         # 
+#  COMPILE_OPTS += -DTTC_USART2_CTS=         #  
+#}USART2
+#{ USART3 - define serial port #3
+#  COMPILE_OPTS += -DTTC_USART3=             # internal device being used for this serial port
+#  COMPILE_OPTS += -DTTC_USART3_TX=          # 
+#  COMPILE_OPTS += -DTTC_USART3_RX=          # 
+#  COMPILE_OPTS += -DTTC_USART3_RTS=         #  
+#  COMPILE_OPTS += -DTTC_USART3_CTS=         # 
+#}USART3
+#{ USART4 - define serial port #4
+#  COMPILE_OPTS += -DTTC_USART4=             # internal device being used for this serial port
+#  COMPILE_OPTS += -DTTC_USART4_TX=          # 
+#  COMPILE_OPTS += -DTTC_USART4_RX=          # 
+#  COMPILE_OPTS += -DTTC_USART4_RTS=         #  
+#  COMPILE_OPTS += -DTTC_USART4_CTS=         # 
+#}USART4
+#{ USART5 - define serial port #5
+#  COMPILE_OPTS += -DTTC_USART5=             # internal device being used for this serial port
+#  COMPILE_OPTS += -DTTC_USART5_TX=          # 
+#  COMPILE_OPTS += -DTTC_USART5_RX=          # 
+#  COMPILE_OPTS += -DTTC_USART5_RTS=         #  
+#  COMPILE_OPTS += -DTTC_USART5_CTS=         # 
+#}USART5
+#{ SPI1 - define serial peripheral interface port #1
+#  COMPILE_OPTS += -DTTC_SPI1=SPI1           # internal device being used for this port
+#  COMPILE_OPTS += -DTTC_SPI1_MOSI=GPIOA,7   # Master Out Slave In
+#  COMPILE_OPTS += -DTTC_SPI1_MISO=GPIOA,6   # Master In Slave Out
+#  COMPILE_OPTS += -DTTC_SPI1_SCK=GPIOA,5    # Serial Clock 
+#  COMPILE_OPTS += -DTTC_SPI1_NSS=GPIOA,4    # Slave Select
+#}SPI1
+#{ SPI2 - define serial peripheral interface port #2
+#  COMPILE_OPTS += -DTTC_SPI2=               # internal device being used for this port
+#  COMPILE_OPTS += -DTTC_SPI2_MOSI=          # Master Out Slave In
+#  COMPILE_OPTS += -DTTC_SPI2_MISO=          # Master In Slave Out
+#  COMPILE_OPTS += -DTTC_SPI2_SCK=           # Serial Clock 
+#  COMPILE_OPTS += -DTTC_SPI2_NSS=           # Slave Select
+#}SPI2
+#{ SPI3 - define serial peripheral interface port #3
+#  COMPILE_OPTS += -DTTC_SPI3=               # internal device being used for this port
+#  COMPILE_OPTS += -DTTC_SPI3_MOSI=          # Master Out Slave In
+#  COMPILE_OPTS += -DTTC_SPI3_MISO=          # Master In Slave Out
+#  COMPILE_OPTS += -DTTC_SPI3_SCK=           # Serial Clock 
+#  COMPILE_OPTS += -DTTC_SPI3_NSS=           # Slave Select
+#}SPI3
+#{ I2C1 - define inter-integrated circuit interface #1
+#  COMPILE_OPTS += -DTTC_I2C1=               # internal device being used for this port
+#  COMPILE_OPTS += -DTTC_I2C1_SDA=           # Serial Data
+#  COMPILE_OPTS += -DTTC_I2C1_SCL=           # Serial Clock
+#  COMPILE_OPTS += -DTTC_I2C1_SMBAL=         # SMBus Alert
+#}I2C1
+#{ I2C2 - define inter-integrated circuit interface #2
+#  COMPILE_OPTS += -DTTC_I2C2=               # internal device being used for this port
+#  COMPILE_OPTS += -DTTC_I2C2_SDA=           # Serial Data
+#  COMPILE_OPTS += -DTTC_I2C2_SCL=           # Serial Clock
+#  COMPILE_OPTS += -DTTC_I2C2_SMBAL=         # SMBus Alert
+#}I2C2
+
+# I2S- (Inter-IC Sound-) Interface              ToDo: define constant names
+
+# CAN- (Controller Area Network-) Bus Interface ToDo: define constant names
+
+
+#}EXTENSION_100_board_test_eth
