@@ -1,0 +1,39 @@
+\chapter{Introduction}
+
+The objective of this work is to implement some extensions for the ToolChain used in the HLB Labors \url{www.hlb-labor.de} from the Fachhochschule Münster.
+
+The extensions involve the inclusion of an ethernet module to manage the hardware using a simpler API that is consistent with the rest of extensions that The ToolChain implements, the inclusion of the LwIP stack that allows for a wider range of features than the uIP stack that is already integrated, and some additional changes that were deemed convenient during the development to ease the debugging and management.
+
+\section {STM32-ToolChain}
+
+As a basis for the work The ToolChain from the HLB Labors \url{www.hlb-labor.de} of the Fachhochschule Münster.
+
+It offers a very modular design that is based on extensions that can be disabled and enabled easily by running shell scripts that manage the creation of links and makefiles for the inclusion of the code and headers that are required for the extension to run. The shell scripts manage the multiple dependencies that can occur between extensions as well as conflicts for extensions that implement the same functionality.
+
+As one of the most important extensions, this ToolChain offers integration with the multitasking scheduler from FreeRTOS that allows for multiple simultaneous tasks to work in parallel.
+
+The ToolChain also offers uIP support. UIP is a library that offers a very minimal and simple IP stack that can be useful for applications that don't require multiple connections, as it can only manage one connection at a time.
+
+However, as of the date of this document, there's no implementation of an extension that exposes an Ethernet API, so for the proper integration of a new extension it would be convenient to expose this API by means of another extension that is used as dependency by both uIP and LwIP, since to this date there's no support for any other network technology than the Ethernet layer.
+
+\section {Ethernet}
+
+Ethernet is a physical and data link layer technology intended to be used in local area networks (LANs), invented by the engineer Robert Metcalfe at Xerox PARC.
+
+When first widely deployed in the 1980s, Ethernet supported a maximum theoretical data rate of 10 megabits per second (Mbps). Later, so-called "Fast Ethernet" standards increased this maximum data rate to 100 Mbps. Today, Gigabit Ethernet technology further extends peak performance up to 1000 Mbps.
+
+While the run length of individual Ethernet cables is limited to roughly 100 meters, it's possible to easily extend Ethernet networks to link entire schools or office buildings using network bridge devices.
+
+It's a very widespread and fast technology that can be very useful for connecting an embedded device to computers or to routers that can offer remote control of the device through the network in a reliable way, since the physically wired connection is more stable and energy efficient than wireless connections.
+
+So, while the delay in the connection might not be as good as other solutions more suitable for control messages. It's speed, reliability and widespread usage makes Ethernet a handy technology to have in an embedded device for sending other kinds of data, and it might be a valid choice for a communication layer in a variety of possible scenaries.
+
+\section{The LwIP stack}
+
+
+The porting of this stack is interesting since it offers a fully operational IP stack with multithreading support, which is suitable for the FreeRTOS system that the ToolChain already provides.
+
+In addition, LwIP offers a POSIX / Berkeley sockets compatible API which could be very useful for porting other libraries that are built around such an API. While this API doesn't comply fully with the specifications of the Berkeley sockets API, it's close enough for many applications.
+
+These factors, plus the explicit goal from the LwIP team to try and use the lowest memory footprint possible so that it's usable in embedded devices make the LwIP library a very good choice as an IP stack to be integrated in the ToolChain.
+

@@ -143,3 +143,5 @@ fi
 } 2>&- >> compile.log & # asyncronous, append to log
 
 #}
+
+[ -e main.bin ] # return OK if exists

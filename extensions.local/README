@@ -1,0 +1,91 @@
+#
+# ToolChain changes
+#
+# Fernando Carmona Varo 2012
+#
+
+I've set up a directory with all the modifications I've made to the ToolChain in order to make it more comfortable for me to make changes while keeping up with the updates and storing a backup of the original files.
+
+This directory's path is "extensions.local/changes"
+
+Some other files that might be found are:
+
++ changes.apply.sh
+  This script will apply the changes to the ToolChain version being used by the proyect by symlinking them (so that the changes folder stays in sync), keeping also a backup of the files.
+  The script will be called from the project-specific compile script.
+
++ changes.undo.sh
+  This script will restore the ToolChain to its original state from the backups.
+
++ changes.v<Version>.diff
+  This is just a diff file generated after applying the changes, it's just for me to review what changes were actually done and see if there's something from a new ToolChain version that I should add to my local changed files.
+  Note that while the ToolChain would be always in sync after the symlinking, the diff wont, so it shouldn't be used for patching.
+
+  
+*** Changes ***
+
+* ToolChain/install_06_FreeRTOS.sh:
+  Added the makefile and install script for lwip, using the lwIP files that come bundled with FreeRTOS
+
+* ToolChain/install_07_Board_Olimex_P107.sh:
+  Added macro definitions for the Ethernet pins
+  
+* ToolChain/install_07_Network_LwIP.sh: (NEW)
+New install script that will download and install the required files for lwip version 1.4 to be used in the ToolChain
+  
+* ToolChain/install_24_TTC_ETHERNET.sh: (NEW)
+* ToolChain/install_20_ExampleLwIP.sh: (NEW)
+  These are new install scripts added for the ttc_eth and lwip example respectively
+
+* Template/configs/lwipopts.h (NEW)
+  Options file for LwIP
+
+* Template/configs/FreeRTOSConfig.h
+  Added some preprocessor macros for setting the IP of the device (this is the place recomended for it by FreeRTOS). Also enabled the stack overflow check.
+  
+* Template/configs/stm32f10x_it.c
+  Added the function FaultStack_Check that is called from various fault handlers (all the fault handlers) are enabled by a line in main.c
+  This function will retrieve some useful registers for debugging.
+  
+* Template/additionals/examples/example_lwip.h: (NEW)
+* Template/additionals/examples/example_lwip.c: (NEW)
+  example using LwIP. It will run either a server or a client, depending on the value of EXAMPLE_LWIP_SERVER. Also, if EXAMPLE_LWIP_TCP is 1 it will use TCP, else it will be UDP.
+
+* CommonLibraries/stm32/stm32_ethernet.h: (NEW) 
+* CommonLibraries/stm32/stm32_ethernet.c: (NEW)
+  Ethernet firmware library from ST (MCD Application Team).
+  "stm32_eth" is the vendor name for the firmware file, which conflicts with the stm32_* naming for the Toolchain architecture-specific code.
+    Note that it doesnt support mutiple indexes for different ethernet devices in the same board (stm32 firmware doesn't support it).
+  
+* CommonLibraries/ttc_ethernet.h: (NEW)
+* CommonLibraries/ttc_ethernet.c: (NEW)
+  Platform-independent functions for management of the ethernet interface
+
+
+* ToolChain/400_network_lwip/ttc_port/**/* (NEW)
+  Additional Files for the LwIP installation, offering stack compatiblity layer configured to be used with FreeRTOS and the ToolChain.
+  sys_arch.c provides wrappers to FreeRTOS operations to be used by the LwIP library
+  ttc_eth_netif.c contains the networking interface that operates using ttc_eth calls
+  arch/cc.h defines some macros for some debug and protection operations
+  syscalls.c provides some minimal implementations for some required system functions
+  Might be placed in other location if fitting.
+
+* CommonLibraries/stm32/stm32_io.h:
+  It was required to include "stddef.h" header since "size_t" was being used and not directly provided.
+
+* CommonLibraries/ttc_usart.h:
+  There was an error of conflicting types for 'ttc_usart_read_byte' and 'ttc_usart_read_word', the "TimeOut" variable was u16_t instead of u32_t as specified in ttc_usart.c
+
+* ToolChain/scripts/compile.sh:
+  Added "LESS" options to jump to errors and highlight them, if no errors, then warnings.
+  This was in my project-specific compile script before, but after version 1.0.45 and the addition of the different check for warnings it was required to add it to the ToolChain compile script for it to work properly without too much warning noise when there are errors. Also, I think it's a nice thing to have in general, especially if color highlight is active for less.
+
+* ToolChain/scripts/gdb.sh:
+  There was a "killall" line at the start that was printing errors when the process was not found and this confused third-party gdb UIs that use the "-i=mi" gdb option to process gdb metadata output. It was replaced with pkill.
+
+* ToolChain/scripts/debug.sh:
+  Now that the gdb_server.sh script checks for openocd and returns, this script isn't as useful as before. But anyway, I fixed it so that it doesn't kill the client when gdb_server exits.
+
+* ToolChain/installAll.sh:
+  Won't run "install_" files that are backups (end with "~" or "#").
+  This is not really needed to be merged for normal projects, but I needed it here to keep the backups of the install scripts in the same directory they are without running them.

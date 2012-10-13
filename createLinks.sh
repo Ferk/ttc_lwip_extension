@@ -15,16 +15,24 @@
 Source="$HOME/Source"
 
 echo "$0: regenerating links.."
-rm 2>/dev/null _;                     ln -sf $Source/ToolChain_STM32/ToolChain/scripts  _
+rm -f _;                     ln -s $Source/ToolChain_STM32/ToolChain/scripts  _
 for Script in makefile clean.sh; do
   if [ ! -e $Script ]; then
-    rm 2>/dev/null $Script
+    rm -f $Script
     ln -s _/$Script .
   fi
 done
+rm -f additionals/common;    ln -s $Source/ToolChain_STM32/CommonLibraries/   additionals/common
 
-rm 2>/dev/null additionals/common;    ln -sf $Source/ToolChain_STM32/CommonLibraries/   additionals/common
-rm 2>/dev/null additionals/examples;  ln -sf $Source/ToolChain_STM32/Examples/          additionals/examples
+###
+# These are just for this particular project 
+# since it's an example that modifies the Toolchain template, I want to keep the Template files updated when I modify it
+rm -f additionals/examples;     ln -s $Source/ToolChain_STM32/Template/additionals/examples     additionals/
+
+for file in "$(pwd)"/extensions.local/changes/Template/configs/*; do
+    ln -sf "$file" configs/
+done
+###
 
 Version=`cat _/Version`
 

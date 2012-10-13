@@ -1,0 +1,208 @@
+% Dokumentation LWIP Integration
+%
+% Fernando Carmona Varo 2012
+
+
+% Latex Code by Richard Socher, www.socher.org, permission granted to redistribute, if this line is left here ;)
+
+\documentclass[
+   	%pdftex,
+    a4paper,
+    12pt,
+   	%twoside=semi,
+   	openany,
+   	%openright,
+   	%twoside, 
+	 oneside,  
+  	%idxtotoc,
+   %halfparskip,
+    %chapterprefix,
+   	pointlessnumbers ,        % Keine Punkte nach den Kapiteln zB 1.2 statt 1.2. 
+    %cleardoubleempty         % Seiten ganz leer machen 
+]{scrbook}%scrartcl}%scrbook} % bei scrartcl gibt es keine Chapter!!!!
+ 
+\setlength{\textheight}{235mm}
+%\addtolength{\oddsidemargin}{5mm}
+%\addtolength{\evensidemargin}{-5mm}
+
+    
+\usepackage{moreverb}
+ 
+\setcounter{secnumdepth}{5}
+\newcommand{\subsubsubsection}[1]{\paragraph{#1}\mbox{}\\}
+
+%\usepackage[german]{babel}
+\usepackage[english]{babel}
+%ü,ä,ö,ß 
+\usepackage[latin9]{inputenc}
+%\usepackage[toc,page]{appendix}
+
+
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage{tabularx}
+
+%footnote
+%\usepackage[automark]{scrpage2}
+%\pagestyle{scrheadings}
+
+\usepackage{graphics}
+
+\usepackage{verbatim}
+\usepackage{supertabular} 
+\usepackage{listings}
+\usepackage{color}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\usepackage{placeins}
+\usepackage{float}
+% \lstset{
+% 	backgroundcolor=\color{lbcolor},
+% 	tabsize=4,
+% 	rulecolor=,
+% 	language=C,
+%         basicstyle=\scriptsize,
+%         upquote=true,
+%         aboveskip={1.5\baselineskip},
+%         columns=fixed,
+%         showstringspaces=false,
+%         extendedchars=true,
+%         breaklines=true,
+%         prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+%         frame=single,
+%         showtabs=false,
+%         showspaces=false,
+%         showstringspaces=false,
+%         identifierstyle=\ttfamily,
+%         keywordstyle=\color[rgb]{0,0,1},
+%         commentstyle=\color[rgb]{0.133,0.545,0.133},
+%         stringstyle=\color[rgb]{0.627,0.126,0.941},
+%        % backgroundcolor=\color{yellow}
+%        float=htbp
+% }
+\definecolor{eclipse-keywords}{rgb}{0.55,0,0.337}
+\definecolor{eclipse-strings}{rgb}{0.165,0,1}
+\definecolor{eclipse-comments}{rgb}{0.247,0.498,0.373}
+ \definecolor{lstset_background}{RGB}{227,255,255}
+ 
+\lstset{
+	basicstyle=\ttfamily\scriptsize\mdseries,
+	language=C,
+	identifierstyle=,
+	%commentstyle=\color{gray},	
+	keywordstyle= \color{eclipse-keywords}\bfseries,
+    commentstyle=\color{eclipse-comments},
+    stringstyle=\color{eclipse-strings},
+%     keywordstyle=\color[rgb]{0,0,1},
+%     commentstyle=\color[rgb]{0.133,0.545,0.133},
+%     stringstyle=\color[rgb]{0.627,0.126,0.941},
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=5,
+	breaklines=true,
+	frame=single,
+	showstringspaces=false,
+	tabsize=4,
+	backgroundcolor=\color{lstset_background},
+	captionpos=t
+	%float=p,
+}
+% \lstset{
+% backgroundcolor=\color{lstset_background},
+% numbers=right,
+%     stepnumber=1,
+%     numbersep=-6pt,
+%     xleftmargin=3ex,
+%     xrightmargin=3ex,
+%     numberblanklines=false,
+%     numberstyle=\tiny\bf,
+%     frame=trBL,
+%     keywordstyle= \color{eclipse-keywords}\bfseries,
+%     commentstyle=\color{eclipse-comments},
+%     stringstyle=\color{eclipse-strings},
+%     numbers=left,
+% 	numberstyle=\tiny,
+% 	stepnumber=5,
+% 	breaklines=true,
+% 	frame=single,
+% 	showstringspaces=false,
+% 	tabsize=4,
+% 	captionpos=top
+% }
+
+
+
+\usepackage{array}
+
+\usepackage[refpages]{gloss}
+
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage[squaren]{siunits}
+ 
+\usepackage{courier}
+
+\usepackage{rotating}
+
+\usepackage{color}
+
+\usepackage[T1]{fontenc} %Type-1 verwenden
+\usepackage{lmodern} %Latin-Modern Schriften
+\clubpenalty = 10000 %schliesst Schusterjungen aus
+\widowpenalty = 10000 %schliesst Hurenkinder aus
+\usepackage{microtype} %Microtype verbessert Satz
+\usepackage[right]{eurosym}
+%Absatz und Zeilenabstand
+\setlength{\parskip}{12pt} %Abstand nach Absatz
+\setlength{\parindent}{0pt} %nicht einrücken nach Absatz
+\usepackage{setspace}
+\onehalfspacing %1,5-facher Zeilenabstand
+
+%Papiergröße und Seitenränder
+\usepackage{geometry}
+\geometry{verbose,a4paper,portrait,top=25mm,bottom=25mm,outer=20mm,inner=30mm,headheight=8mm,headsep=5mm,footskip=10mm,marginparsep=0pt,marginparwidth=0pt}
+
+%Kopf-/Fußzeile
+\usepackage{scrpage2}
+\pagestyle{scrheadings}
+\clearscrheadfoot
+\automark[chapter]{chapter} %Überschrift in Kopfzeile
+\usepackage{footnote} %Package für Fußnoten
+\renewcommand{\headfont}{\footnotesize}
+\setheadsepline{0.4pt} %obere Linie
+\setfootsepline{0.4pt} %untere Linie
+\ihead[Businessplan ET-Engineering]{Projektdokumentation} \ohead[\headmark]{\headmark} %Inhalt Kopfzeile Mitte
+\ofoot[\pagemark]{\pagemark} %Inhalt Fußzeile Außen
+\ifoot{Master Projekt SS 2011 WS 2011/12 } %Inhalt Fußzeile Mitte
+\renewcommand*{\chapterpagestyle}{scrheadings} %auch auf Kapitelanfangsseiten Linien einblenden
+\setkomafont{captionlabel}{\bfseries} %Abbildungsunterschrift: erster Teil Fett
+\usepackage[babel,german=quotes]{csquotes} 
+
+\usepackage{comment}
+\usepackage{titleref}
+
+%\definecolor{LinkColor}{rgb}{0,0,0.5} % blue links in pdf?
+\definecolor{StdColor}{rgb}{0,0,0}
+\definecolor{CiteColor}{rgb}{0,0,0}
+\definecolor{URLColor}{rgb}{0,0,0}
+\usepackage[%
+    pdftitle={Projekt Informationstechnik},%
+    pdfauthor={Fernando Carmona Varo},%
+    pdfcreator={LaTeX with hyperref},
+    pdfsubject={autonomer Antennenrotor },
+    pdfkeywords={autonomer Antennenrotor, Skytraq, STM32 }]{hyperref}
+\hypersetup{colorlinks=true,%
+    linkcolor=StdColor,%
+    citecolor=CiteColor,%
+    filecolor=StdColor,%
+    menucolor=StdColor,%
+   % pagecolor=LinkColor,%
+    urlcolor=URLColor}
+
+\usepackage{pdfpages} 
+
+\makegloss  
+% do this in shell to update:
+% directoryOfThesis> bibtex baa_main.gls

@@ -1,0 +1,7 @@
+tmp/
+example_lwip.pdf
+*.aux
+*.lof
+*.toc
+*.lot
+*.out

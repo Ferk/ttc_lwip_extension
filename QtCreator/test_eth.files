@@ -1,7 +1,0 @@
-../_/interface.cfg
-../activate_project.sh
-../extensions.active/makefile
-../extensions.local/activate.100_board_XXX.sh
-../extensions.local/makefile.100_board_XXX
-../extensions.local/makefile.700_extra_settings
-../makefile

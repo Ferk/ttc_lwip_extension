@@ -1,5 +1,5 @@
-// additional files for QtCreator/test_eth.files
-// All files listed here are being added to QtCreator/test_eth.files on every run of ./_/updateProjectFiles.pl.
+// additional files for QtCreator/example_lwip.files
+// All files listed here are being added to QtCreator/example_lwip.files on every run of ./_/updateProjectFiles.pl.
 //
 // Lines starting with // will be ignored
 
@@ -9,5 +9,4 @@ activate_project.sh
 extensions.local/makefile.700_extra_settings
 extensions.local/activate.100_board_XXX.sh
 extensions.local/makefile.100_board_XXX
-_/interface.cfg
 

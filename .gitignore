@@ -25,5 +25,7 @@ flash.sh
 configs/openocd_flash.cfg
 configs/openocd_target.cfg
 
-# For this project, this one is also symlinked
+# For this project, these are also symlinked
 configs/lwipopts.h
+configs/FreeRTOSConfig.h
+configs/stm32f10x_it.c

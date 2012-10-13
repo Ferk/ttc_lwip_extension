@@ -4,15 +4,11 @@
 #                         Extension to central makefile
 #
 #                                  Project
-#                               test_eth
+#                               example_lwip
 #
 #                               written by 
-#                            Fer
+#                            Fernando Carmona Varo
 #
-
-# Who did it?
-NAME   = test_eth
-AUTHOR = Fer
 
 # can be checked via #ifdef from makefiles
 EXTENSION_700_extra_settings = 1
@@ -30,8 +26,10 @@ COMPILE_OPTS += -DEXTENSION_700_extra_settings
 # Every .c/.cpp file that is to be compiled has to add an .o file to MAIN_OBJS
 # E.g.: MAIN_OBJS += sample.o
 
-MAIN_OBJS += stm32f10x_it.o  # configs/stm32f10x_it.c provides individual reset-handlers
-MAIN_OBJS += stm32_eth.o #system_stm32f10x.o
+# MAIN_OBJS +=
+MAIN_OBJS += stm32f10x_it.o
+
+#MAIN_OBJS += hardfaulthandler.o
 
 
 # Every folder containing .c/.cpp files to be compiled must be added to vpath %.c
@@ -39,8 +37,6 @@ MAIN_OBJS += stm32_eth.o #system_stm32f10x.o
 
 # vpath %.c
 
-# You may add precompiled static libraries here
-
-# LD_LIBS +=
+vpath %.s .
 
 #}EXTENSION_700_extra_settings

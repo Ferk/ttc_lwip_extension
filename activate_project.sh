@@ -116,7 +116,7 @@ if [ 1 == 1 ]; then #{ 100 - activate your board
 
   # Protoboard LCD from Olimex -> http://olimex.com/dev/stm32-lcd.html
   #activate.100_board_wsn3_stm32w108.sh QUIET "$0"
-
+  #activate.100_board_olimex_h107.sh QUIET "$0"
 
 fi #}100
 if [ 1 == 1 ]; then #{ 200 - CPU
@@ -174,7 +174,7 @@ if [ 1 == 1 ]; then #{ 250 - Std Peripherals Library
   #activate.250_stm_std_peripherals__dbgmcu.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_dma.c
-  activate.250_stm_std_peripherals__dma.sh QUIET "$0"
+  #activate.250_stm_std_peripherals__dma.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_exti.c
   #activate.250_stm_std_peripherals__exti.sh QUIET "$0"
@@ -186,7 +186,7 @@ if [ 1 == 1 ]; then #{ 250 - Std Peripherals Library
   #activate.250_stm_std_peripherals__fsmc.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_gpio.c
-  activate.250_stm_std_peripherals__gpio.sh QUIET "$0"
+  #activate.250_stm_std_peripherals__gpio.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_i2c.c
   #activate.250_stm_std_peripherals__i2c.sh QUIET "$0"
@@ -198,7 +198,7 @@ if [ 1 == 1 ]; then #{ 250 - Std Peripherals Library
   #activate.250_stm_std_peripherals__pwr.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_rcc.c
-  activate.250_stm_std_peripherals__rcc.sh QUIET "$0"
+  #activate.250_stm_std_peripherals__rcc.sh QUIET "$0"
 
   # adds c-source to list of compiled objects: stm32f10x_rtc.c
   #activate.250_stm_std_peripherals__rtc.sh QUIET "$0"
@@ -246,6 +246,9 @@ if [ 1 == 1 ]; then #{ 270 - Communication Application Peripheral Library
   # adds c-source to list of compiled objects: cpal_usercallback_template.c
   #activate.270_CPAL_STM32_CPAL_Driver__cpal_usercallback_template.sh QUIET "$0"
 
+  # DEFAULT_INFO: ../extensions/activate.270_eth_driver.sh created by ./install_25_eth_driver.sh
+  #activate.270_eth_driver.sh QUIET "$0"
+
 fi #}270
 if [ 1 == 1 ]; then #{ 300 - multitasking scheduler
   Rank='300'
@@ -269,7 +272,7 @@ if [ 1 == 1 ]; then #{ 300 - multitasking scheduler
   # DEFAULT_INFO: ../extensions/activate.300_scheduler_free_rtos_network_lwip.sh created by ./install_06_FreeRTOS.sh
   #activate.300_scheduler_free_rtos_network_lwip.sh QUIET "$0"
   activate.300_scheduler_free_rtos.sh QUIET "$0"
-  activate.300_scheduler_free_rtos_heap2.sh QUIET "$0"
+  activate.300_scheduler_free_rtos_heap1.sh QUIET "$0"
 
 fi #}300
 if [ 1 == 1 ]; then #{ 400 - External Support Libraries
@@ -284,9 +287,6 @@ if [ 1 == 1 ]; then #{ 400 - External Support Libraries
   # TCP/IP-stack uIP (only one socket; manual resend; no multitasking required)
   #activate.400_network_uip_ste101p.sh QUIET "$0"
 
-  # Architecture independent support for Inter-integrated circuit interface (I2C)
-  #activate.400_sensor_lis3lv02dl.sh QUIET "$0"
-
 fi #}400
 if [ 1 == 1 ]; then #{ 500 - Support Libraries provided by ToolChain_STM32
   Rank='500'
@@ -299,13 +299,10 @@ if [ 1 == 1 ]; then #{ 500 - Support Libraries provided by ToolChain_STM32
   #activate.500_ttc_adc.sh QUIET "$0"
 
   # Provides some global struct-pointers to CPU-registers. Makes register-debugging easier.
-  activate.500_ttc_debug_registers.sh QUIET "$0"
-
-  # Architecture independent support for Ethernet
-  #activate.500_ttc_eth.sh QUIET "$0"
+  #activate.500_ttc_debug_registers.sh QUIET "$0"
 
   # Architecture independent support for Universal Synchronous Asynchronous Serial Receiver Transmitter (GPIO)
-  activate.500_ttc_gpio.sh QUIET "$0"
+  #activate.500_ttc_gpio.sh QUIET "$0"
 
   # Architecture independent support for Inter-integrated circuit interface (I2C)
   #activate.500_ttc_i2c.sh QUIET "$0"
@@ -352,7 +349,7 @@ if [ 1 == 1 ]; then #{ 600 - Examples
   #activate.600_example_leds.sh QUIET "$0"
 
   # DEFAULT_INFO: ../extensions/activate.600_example_lwip.sh created by ./install_20_ExampleLwIP.sh
-  #activate.600_example_lwip.sh QUIET "$0"
+  activate.600_example_lwip.sh QUIET "$0"
 
   # Example of how to use architecture independent Serial Peripheral Interface (SPI) support
   #activate.600_example_spi_master.sh QUIET "$0"
@@ -368,7 +365,6 @@ if [ 1 == 1 ]; then #{ 600 - Examples
 
   # Example of how to use architecture independent USART support
   #activate.600_example_usart.sh QUIET "$0"
-  #activate.600_example_leds.sh QUIET "$0"
 
 fi #}600
 

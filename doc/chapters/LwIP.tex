@@ -1,0 +1,439 @@
+
+\chapter {Porting lwIP to the STM32 ToolChain}
+
+lwIP is a lightweight, independent implementation of the TCP/IP stack that has been developed by Adam Dunkels at the Computer and Networks Architectures (CNA) lab at the Swedish Institute of Computer Science (SICS).
+
+It is actually one of the objectives of LwIP to be suitable for embedded systems by reducing the usage of RAM while still having a full scale TCP.
+
+\section{LwIP Features}
+
+\subsection { Protocols }
+The lwIP TCP/IP stack as of version 1.4.0 supports the following protocols:
+\begin{itemize}
+  \item IP (Internet Protocol) including packet forwarding over multiple network
+    interfaces
+  \item ICMP (Internet Control Message Protocol) for network maintenance and debugging
+  \item IGMP (Internet Group Management Protocol) for multicast traffic management
+  \item UDP (User Datagram Protocol) including experimental UDP-lite extensions
+  \item TCP (Transmission Control Protocol) with congestion control, RTT estimation
+    and fast recovery/fast retransmit
+  \item Specialized raw/native API for enhanced performance
+  \item Optional Berkeley-like socket API
+  \item DNS (Domain names resolver)
+  \item SNMP (Simple Network Management Protocol)
+  \item DHCP (Dynamic Host Configuration Protocol)
+  \item AUTOIP (for IPv4, conform with RFC 3927)
+  \item PPP (Point-to-Point Protocol)
+  \item ARP (Address Resolution Protocol) for Ethernet
+\end{itemize}
+
+\subsection { Types of API (Aplication Programming Interface) }
+LwIP offers three types of API to use in its development:
+\begin{itemize}
+  \item Raw API: it is the native API used by the lwIP stack itself to interface with the different protocols.
+  \item Netconn API: it is a sequential API with a higher level of abstraction than the raw API.
+  \item Socket API: it is a Berkeley-like API
+\end{itemize}
+
+\subsubsection { The Raw API }
+
+The raw API is the native API used by the lwIP thread that is managed using the other API types. It is an event-driven API designed to be used without an operating system that implements zero-copy send and receive. It is also used by the core stack for interaction between the various protocols.
+
+It is the only API available when running lwIP without an operating system.
+
+This API by itself doesn't make use of the multithreading implicit in lwIP.
+
+A complete documentation on the use of this API can be found in ``additionals/400\_network\_lwip/doc/rawapi.txt'' from any ToolChain project root folder.
+
+\subsubsection { The Netconn API }
+
+The Netconn API makes use of a dedicated thread to dispatch the networking commands, which means that the FreeRTOS scheduler is required for this API to work properly. This thread is defined in the code as the "tcpip-thread", all packet processing (input as well as output) in the core of the stack is done inside of it. Application threads using the netconn API communicate with this core thread using message boxes and semaphores.
+
+This API supports both the UDP and TCP protocols from the transport layer, and can also send RAW IP packages.
+
+The functions starting with the ``\verb/netconn_/'' prefix expose this API, all of them are defined in the header files ``\verb/api.h/'' and ``\verb/netbuf.h/'', both of them can be found in the folder ``additionals/400\_network\_lwip/src/include/lwip/'' from any ToolChain root folder.
+
+An application can use the following functions to work with a netconn:
+
+\begin{itemize}
+  \item \verb/netconn_new()/ - create a new connection
+  \item \verb/netconn_new_with_callback()/ - create new connection
+  \item \verb/netconn_new_with_proto_and_callback()/ - create a new connection
+  \item \verb/netconn_delete()/ - delete an existing connection
+  \item \verb/netconn_bind()/ - bind a connection to a local port/ip
+  \item \verb/netconn_connect()/ - connect a connection to a remote port/ip
+  \item \verb/netconn_disconnect()/ - disconnect a connection from a remote port/ip
+  \item \verb/netconn_send()/ - send data to the currently connected remote port/ip (not applicable for TCP)
+  \item \verb/netconn_sendto()/ - send data to a specified remote port/ip (not applicable for TCP)
+  \item \verb/netconn_recv()/ - receive data from a netconn
+  \item \verb/netconn_set_recvtimeout()/ - set a receive timeout value for a netconn structure
+  \item \verb/netconn_get_recvtimeout()/ - get the receive timeout value for a netconn structure
+\end{itemize}
+
+    For TCP connections, additional functions are supported:
+
+\begin{itemize}
+  \item \verb/netconn_listen()/ - set a TCP connection into listen mode
+  \item \verb/netconn_accept()/ - accept an incoming connection on a listening TCP connection
+  \item \verb/netconn_write()/ - send data on a connected TCP netconn
+  \item \verb/netconn_close()/ - close a TCP netconn without deleting it
+\end{itemize}
+
+Some higher-level protocol support is provided for applications:
+
+\begin{itemize}
+  \item \verb/netconn_gethostbyname()/ - Does a name lookup (queries dns server if req'd) to resolve a host name to an IP address
+  \item \verb/netconn_join_leave_group()/ - basic IGMP multicast support
+\end{itemize}
+
+The send and receive functions use netbufs to avoid copy operations. These are structs which contain internal representations of a packet (which in turn are defined as ``\verb/pbufs/''). Both netbufs and pbufs can accomodate both allocated memory and referenced memory. Allocated memory is RAM that is explicitly allocated for holding network data, whereas referenced memory might be either application managed RAM or external ROM. Referenced memory is useful for sending data that is not modified, such as static web pages or images.
+
+The data in a netbuf can be fragmented into diferenly sized blocks. This means that an application must be prepared to accept fragmented data. Internally, a netbuf has a pointer to one of the fragments in the netbuf. Two functions, ``\verb/netbuf_next()/'' and ``\verb/netbuf_first()/'' are used to manipulate this pointer.
+
+Netbufs that have been received from the network also contain the IP address and port number of the originator of the packet. Functions for extracting those values exist.
+
+The following functions can be used to work with netbufs:
+
+\begin{itemize}
+  \item \verb/netbuf_new()/ - create (allocate) and initialize a new netbuf. The netbuf doesn't yet contain a packet buffer!
+  \item \verb/netbuf_delete()/ - deallocate a netbuf allocated by \verb/netbuf_new()/.
+  \item \verb/netbuf_alloc()/ - allocate memory for a packet buffer for a given netbuf.
+  \item \verb/netbuf_free()/ - free the packet buffer included in a netbuf
+  \item \verb/netbuf_ref()/ - let a netbuf reference existing (non-volatile) data.
+  \item \verb/netbuf_chain()/ - chain one netbuf to another
+  \item \verb/netbuf_len()/ - get the total length of the data in a netbuf object, taking into account all chain links.
+  \item \verb/netbuf_data()/ - get the data pointer and length of the data inside a netbuf.
+  \item \verb/netbuf_copy()/ - copy the netbuf object to the destination location. 
+  \item \verb/netbuf_copy_partial()/ - copy at most a given amount of bytes from the netbuf object to the destination location. 
+  \item \verb/netbuf_next()/ - move the current data pointer of a packet buffer contained in a netbuf to the next part. The packet buffer itself is not modified.
+  \item \verb/netbuf_first()/ - move the current data pointer of a packet buffer contained in a netbuf to the beginning of the packet. The packet buffer itself is not modified.
+\end{itemize}
+
+\subsubsection { The Socket API }
+
+LwIP implements an API that is targeted at compatibility to POSIX / BSD sockets.
+
+The following is the list of functions that are implemented by the LwIP socket API. This list includes the most common functions but it's not fully complete, as some functions such as ``\verb/recvmsg()/'' are not implemented.
+
+\begin{itemize}
+  \item \verb/lwip_accept()/ - extracts the first connection on the queue of pending connections, creates a new socket with the same  socket type protocol and address family as the specified socket, and allocates a new file descriptor for that socket.
+  \item \verb/lwip_bind()/ - assigns a local address to a socket that has no local address assigned.
+  \item \verb/lwip_shutdown()/ - causes all or part of a full-duplex connection on the given socket to be shut down.
+  \item \verb/lwip_getpeername()/ - retrieves the peer address of the specified socket and its length.
+  \item \verb/lwip_getsockname()/ - retrieves the locally-bound address of the specified socket and its length.
+  \item \verb/lwip_getsockopt()/ - retrieves the value for the option specified for a socket. 
+  \item \verb/lwip_setsockopt()/ - modifies the value for the option specified for a socket. 
+  \item \verb/lwip_close()/ - closes an open socket
+  \item \verb/lwip_connect()/ - attempt to make a connection on a socket.
+  \item \verb/lwip_listen()/ - marks a connection-mode socket as accepting connections. The socket may not have been used for another connection previously.
+  \item \verb/lwip_recv()/ - receives a message from a connection-mode or connectionless-mode socket. It is normally used with connected sockets because it does not permit the application to retrieve the source address of received data.
+  \item \verb/lwip_recvfrom()/ - receives a message from a connection-mode or connectionless-mode socket. It is normally used with  connectionless-mode  sockets because it permits the application to retrieve the source address of received data.
+  \item \verb/lwip_send()/ - initiates transmission of a message from the specified socket to its peer. The send() function shall send a message only  when  the socket is connected (including when the peer of a connectionless socket has been set via connect()).
+  \item \verb/lwip_sendto()/ - sends a message through a connection-mode or connectionless-mode socket. If the socket is connectionless-mode, the message  shall be sent to the address specified (the address willbe ignored otherwise).
+  \item \verb/lwip_socket()/ - create an unbound socket in a communications domain, and return a file descriptor that can be used in later function calls that operate on sockets.
+  \item \verb/lwip_read()/ - it's actually a call to \verb/lwip_recvfrom/.
+  \item \verb/lwip_write()/ - it's actually a call to \verb/lwip_send/.
+  \item \verb/lwip_select()/ - examines sets of sockets to  see  whether some of the sockets are ready for reading, are ready for writing, or have an exceptional condition pending.
+  \item \verb/lwip_ioctl()/ - perform control functions on streams.
+  \item \verb/lwip_fcntl()/ - manage the properties of a file descriptor.
+\end{itemize}
+
+There are also some options for the sockets defined in the Berkeley API that are not implemented in the LwIP socket implementation and thus can't be accessed by the ``\verb/getsockopt/'' and ``\verb/setsockopt/'' functions.
+
+The following is the list of socket level options (``\verb/SOL_SOCKET/'' as level parameter in the ``\verb/sockopt/'' functions) that are not implemented in the Berkeley sockets implementation of the LwIP stack.
+
+\begin{itemize}
+  \item \verb/SO_DEBUG/ - reports whether debugging information is being recorded.
+  \item \verb/SO_DONTROUTE/ - reports whether outgoing messages bypass the standard routing facilities.
+  \item \verb/SO_CONTIMEO/ - amount of time that an output function blocks while waiting for an answer to a connect() call.
+  \item \verb/SO_SNDTIMEO/ - amount of time that an output function blocks because flow control prevents data from being sent.
+  \item \verb/SO_OOBINLINE/ - whether the out-of-band data is directly placed into the receive data stream (instead of being only passed when the \verb/MSG_OOB/ flag is set during receiving).
+  \item \verb/SO_SNDBUF/ - sets or gets the maximum socket send buffer in bytes.
+  \item \verb/SO_RCVLOWAT/ - specifies the minimum number of bytes in the buffer until the socket layer will pass the data to the user on receiving.
+  \item \verb/SO_SNDLOWAT/ - specifies minimum number of bytes in the buffer until the socket layer will pass the data to the protocol.
+  \item \verb/SO_USELOOPBACK/ - whether to use loopback.
+\end{itemize}
+
+There are also some missing options on the IP level (``\verb/IPPROTO_IP/'' as level parameter in the ``\verb/sockopt/'' functions) that are listed as follows.
+
+\begin{itemize}
+  \item \verb/IP_HDRINCL/ - whether the application provides the IP header. Applies only to \verb/SOCK_RAW/ sockets.
+  \item \verb/IP_RECVDSTADDR/ - whether the destination IP address for a UDP datagram is returned by the \verb/recvmsg()/ call.
+  \item \verb/IP_RECVIF/ - gets or sets the incoming interface for receiving IPv4 traffic. This option does not change the default interface for sending IPv4 traffic.
+\end{itemize}
+
+\subsection{ Threading }
+
+lwIP started targeting single-threaded environments. When adding multithreading support, instead of making the core thread-safe, another approach was chosen: there is one main thread running the lwIP core (also known as the ``\verb/tcpip_thread/''). The raw API may only be used from this thread. Application threads using the sequential- or socket API communicate with this main thread through message passing.
+
+%%\section{ LwIP Requirements }
+
+
+\section{The ToolChain LwIP Port }
+
+In the directory ``additionals/400\_network\_lwip/'', installed in the ToolChain by the install script ``\verb/install_17_Network_LwIP.sh/'', we can find several subfolders.
+
+\begin{itemize}
+  \item ``\verb/doc//'' - some plain text files with information included in the LwIP redistributable
+  \item ``\verb/src//'' - source code and headers of the version of LwIP installed
+  \item ``\verb/test//'' - test unit to check for the proper working of the LwIP stack
+  \item ``\verb/port//'' - files related to the porting of the LwIP stack to HLB Labors ToolChain
+\end{itemize}
+
+It's in the ``\verb/port//'' subfolder where the logic that connects the LwIP API with the ``\verb/eth_/'' functions can be found. This logic manages the ethernet firmware, defining the Ethernet LwIP Network Interface for the ToolChain. Along with this logic there can be found the ``\verb/sys_arch/'' implementation for LwIP, which allows it to use the FreeRTOS system for the management of semaphores and mailboxes.
+
+\subsection {Ethernet LwIP Network Interface}
+
+The Ethernet LwIP Network Interface provides to the LwIP stack the low level functions for it to communicate with the Ethernet hardware of the device defined as a target for The ToolChain. It uses the ``\verb/eth_/'' functions from the ethernet extension described in Chapter \ref{eth_chapter}, so it is required that the ethernet extension is enabled in the ToolChain, and as long as the ethernet extension is supported in the target device, and enough memory is available, the LwIP stack will be able to work on such device by means of this interface.
+
+This interface is implemented in the ``/port/ttc\_eth\_netif.c'' file.
+
+\subsubsection{Private data}
+
+The interface
+
+\begin{lstlisting}
+/**
+ * Helper struct to hold private data used to operate the ethernet interface.
+ */
+typedef struct {
+    u8_t ETH_Index;
+} ttc_eth_netif_state_t;
+\end{lstlisting}
+
+\subsubsection{Low level functions}
+
+There are 3 low level functions that are the key for the porting of the LwIP stack:
+
+\begin{itemize}
+  \item \verb/low_level_init()/ - performs the initialization steps
+  \item \verb/low_level_output()/ - outputs an Ethernet package using the data form the given pbuf list
+  \item \verb/low_level_input()/ - reads an Ethernet package and builds a pbuf list out of it
+\end{itemize}
+
+\subsubsubsection{Initialization}
+
+For the initialization of the interface, as illustrated in the ``\verb/example_lwip.c/'' code, a struct of the type ``\verb/netif/'' has to be defined, added to the global ``\verb/netif_list/'' managed by LwIP, and activated by setting it up.
+
+\begin{lstlisting}
+  /*
+  Adds your network interface to the netif_list. Allocate a struct
+  netif and pass a pointer to this structure as the first argument.
+  Give pointers to cleared ip_addr structures when using DHCP,
+  or fill them with sane numbers otherwise. The state pointer may be NULL.
+
+  The init function pointer must point to a initialization function for
+  your ethernet netif interface. The following code illustrates it's use.
+  */
+  netif_add( &netif,     // Pointer to the network interface struct to be initialized
+             &ipaddr,    // IP address of the device in the network
+             &netmask,   // IP Network mask
+             &gw,        // Gateway IP address
+             &initstate, // Struct with state initialization data
+             &ttc_eth_netif_init, // Initialization function 
+             &ethernet_input      // Input callback function
+             );
+    
+  netif_add(&netif,
+  &ipaddr, &netmask, &gw, &initstate, &ttc_eth_netif_init, &ethernet_input);
+
+  /*  When the netif is fully configured this function must be called.*/
+  netif_set_up(&netif);
+\end{lstlisting}
+
+For the initialization function it's mandatory that the ``\verb/ttc_eth_netif_init()/'' function is used, since this is what will determine that the interface created will be an ethernet interface that uses the \verb/ttc_eth/ functions as defined by the ToolChain port.
+
+This initialization function will set the netif struct to use the right ethernet output functions, but also it will call the ``\verb/low_level_init/'', which is set to initialise the ethernet clocks, GPIO pins and interruptions by calling the ``\verb/ttc_eth_init()/'' function with the default values given by ``\verb/ttc_eth_get_defaults/'', using the ``\verb/ETH_Index/'' provided by the state initialization data stored in the ``\verb/initstate/'' struct.
+
+\begin{lstlisting}
+  /**
+ * In this function, the hardware should be initialized.
+ * Called from ttc_eth_netif_init().
+ *
+ * @param netif the already initialized lwip network interface structure
+ *        for this ttc_eth_netif
+ */
+static void
+low_level_init(struct netif *netif)
+{
+  ttc_eth_netif_state_t *ttc_eth_netif = netif->state;
+  
+  /* set MAC hardware address length */
+  netif->hwaddr_len = ETHARP_HWADDR_LEN;
+
+#if defined(configMAC_ADDR0)&&defined(configMAC_ADDR1)&&defined(configMAC_ADDR2)&&defined(configMAC_ADDR3)&&defined(configMAC_ADDR4)&&defined(configMAC_ADDR5)
+  /* set MAC hardware address */
+  netif->hwaddr[0] = configMAC_ADDR0;
+  netif->hwaddr[1] = configMAC_ADDR1;
+  netif->hwaddr[2] = configMAC_ADDR2;
+  netif->hwaddr[3] = configMAC_ADDR3;
+  netif->hwaddr[4] = configMAC_ADDR4;
+  netif->hwaddr[5] = configMAC_ADDR5;
+
+  ttc_eth_set_mac_addr(ttc_eth_netif->ETH_Index, netif->hwaddr);
+#endif
+  
+  /* maximum transfer unit */
+  netif->mtu = 1500;
+  
+  /* device capabilities */
+  /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
+  netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+ 
+  /* Initialise ttc_eth ethernet. */
+  ttc_eth_generic_t eth_config;
+  ttc_eth_architecture_t eth_arch;
+  ttc_eth_errorcode_e err;
+  err= ttc_eth_get_defaults( ttc_eth_netif->ETH_Index, &eth_config );
+  Assert( err == tee_OK, ec_UNKNOWN);
+  err= ttc_eth_init( ttc_eth_netif->ETH_Index, &eth_config, &eth_arch );
+  Assert( err == tee_OK, ec_UNKNOWN);
+}
+\end{lstlisting}
+
+\subsubsubsection{Output} 
+
+When the LwIP stack is ready to output a packet, the ``\verb/etharp_output/'' function is called (its address stored in the ``\verb/output/'' field in the netif struct). This function will fill the Ethernet address header for the outgoing IP packet and then finally, through ``\verb/etharp_send_ip/'', send it on the network using the ``\verb/low_level_output/'' function from the interface (``\verb/linkoutput/'' field in the netif struct).
+
+The low level function has to take care of the padding that might have been stablished (``\verb/ETH_PAD_SIZE/'' option) around the packet, and by making use of the Ethernet functions, issue the transmission of the packet, as defined in Section \ref{eth_output}. The data to be copied to the transmitting buffer is split in multiple pbuf structs set in a list configuration. For this reason it's required to iterate through the nodes of the list and copy them to the buffer. Here is where we can see the advantage of using a different approach than the one that was offered by the original firmware provided by the STM development team, since the assembling of the actual buffer to be sent can be by copying done directly to the address where the buffer that is to be sent lies, instead of requiring a second copy operation later.
+
+\begin{lstlisting}
+  /**
+ * This function should do the actual transmission of the packet. The packet is
+ * contained in the pbuf that is passed to the function. This pbuf
+ * might be chained.
+ *
+ * @param netif the lwip network interface structure for this ttc_eth_netif
+ * @param p the MAC packet to send (e.g. IP packet including MAC addresses and type)
+ * @return ERR_OK if the packet could be sent
+ *         an err_t value if the packet couldn't be sent
+ *
+ * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
+ *       strange results. You might consider waiting for space in the DMA queue
+ *       to become availale since the stack doesn't retry to send a packet
+ *       dropped because of memory failure (except for the TCP timers).
+ */
+
+static err_t
+low_level_output(struct netif *netif, struct pbuf *p)
+{
+  ttc_eth_netif_state_t *ttc_eth_netif = netif->state;
+  struct pbuf *q;
+  ttc_eth_errorcode_e err;
+  u8_t *buffer;
+  int l = 0;
+  
+#if ETH_PAD_SIZE
+  pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
+#endif
+
+  // get a new output buffer
+  err = ttc_eth_get_output_buffer(ttc_eth_netif->ETH_Index, &buffer);
+  if(( err != tee_OK ) || (p->tot_len > MAX_ETH_PAYLOAD)) {
+    LINK_STATS_INC( link.lenerr );
+    LINK_STATS_INC( link.drop );
+    snmp_inc_ifoutdiscards( netif );
+    return ERR_BUF;
+  }
+  
+  // fill the buffer
+  for(q = p; q != NULL; q = q->next) {
+    memcpy(buffer+l, q->payload, q->len);
+    l += q->len;
+  }
+
+  // send it
+  err = ttc_eth_send_output_buffer(ttc_eth_netif->ETH_Index, l);
+  if(err != tee_OK) {
+    LINK_STATS_INC( link.memerr );
+    LINK_STATS_INC( link.drop );
+    snmp_inc_ifoutdiscards( netif );
+    return ERR_BUF;
+  }
+  
+#if ETH_PAD_SIZE
+  pbuf_header(p, ETH_PAD_SIZE); /* reclaim the padding word */
+#endif
+
+  LINK_STATS_INC(link.xmit);
+  snmp_add_ifoutoctets( netif, p->tot_len - ETH_PAD_SIZE );
+  
+  return ERR_OK;
+}
+\end{lstlisting}
+
+
+
+\subsubsubsection{Input}
+
+When a package is received in by the Ethernet device, an interrupt is sent to the microcontroller and, if enabled, the corresponding interrupt handler will be triggered.
+
+This handler should be set to call ``\verb/ttc_eth_netif_input/'', with a pointer to the netif struct as argument so that it can be managed by the right network interface. Then, the ``\verb/low_level_input/'' function is called to retrieve the package, return the pbuf and 
+
+\begin{lstlisting}
+/**
+ * Should allocate a pbuf and transfer the bytes of the incoming
+ * packet from the interface into the pbuf.
+ *
+ * @param netif the lwip network interface structure for this ttc_eth_netif
+ * @return a pbuf filled with the received packet (including MAC header)
+ *         NULL on memory error
+ */
+static struct pbuf *
+low_level_input(struct netif *netif)
+{
+  ttc_eth_netif_state_t *ttc_eth_netif = netif->state;
+  struct pbuf *p=NULL, *q;
+  u32_t len;
+  u8* buffer=NULL;
+  int l=0;
+  ttc_eth_errorcode_e err;
+
+  // Receive a frame and obtain its size
+  err= ttc_eth_get_input_buffer(ttc_eth_netif->ETH_Index, &buffer, &len);
+  if( err != tee_OK ) return NULL;
+  
+#if ETH_PAD_SIZE
+  len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
+#endif
+
+  /* Allocate a pbuf chain from the pool, with enough size to store the frame. */
+  p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
+  
+  if (p != NULL) {
+
+#if ETH_PAD_SIZE
+    pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
+#endif
+
+    /*
+     * Read enough bytes to fill this pbuf in the chain. The
+     * available data in the pbuf is given by the q->len
+     * variable.
+     */
+    for(q = p; q != NULL; q = q->next) {
+	memcpy((u8_t*)q->payload, (u8_t*)&buffer[l], q->len);
+	l += q->len;
+    }
+   
+#if ETH_PAD_SIZE
+    pbuf_header(p, ETH_PAD_SIZE); /* reclaim the padding word */
+#endif
+    
+    LINK_STATS_INC(link.recv);
+  } else {
+    LINK_STATS_INC(link.memerr);
+    LINK_STATS_INC(link.drop);
+  }
+
+  // Regardless whether the packet was read or dropped, resume input
+  ttc_eth_resume_input(ttc_eth_netif->ETH_Index);
+  
+  return p;  
+}
+\end{lstlisting}
+
+
+
+
+

@@ -1,0 +1,73 @@
+
+\chapter {Ethernet extension}
+\label{eth_chapter}
+
+\section {Ethernet firmware}
+\label{eth_firmware}
+
+For the interface with the ethernet device of the STM32 it was considered as a safer option to use the the Firmware provided by the MCD Application Team, in it's version V1.0.0 as provided by the example offered in the official website for the stm32f1xx family of microcontrollers.
+
+This firmware offers code that contains the basic functions required to operate with the descriptors that are used to store the data to be sent and the data to be retrieved. The use of multiple descriptors offers by itself certain buffering capabilities, as only one descriptor will be controlled by the CPU while the others will usa DMA to be processed accordingly.
+
+The firmware allows for two modes of operation with the descriptors: Chain-mode (linked list) and Ring-mode (dual buffer), which determine the policy followed to choose the next descriptor after a successful transmission/reception.
+
+In Ring-mode each descriptor points to two data buffer pointers. In the other hand, when using CHAINED mode each descriptor points to only one data buffer pointer, but it will also have a pointer to the next descriptor in the list, hence creating the explicit chaining in the descriptor itself, whereas such explicit chaining is not possible in RING mode.
+
+The firmware offers both an output transmission function (\verb/ETH_HandleTxPkt/) and an input transmission function (\verb/ETH_HandleRxPkt/). These functions copy the data to or from (respectively) the current corresponding descriptor buffer.
+
+\section {ToolChain implementation}
+
+For the integration of an Ethernet extension in the ToolChain it's important to consider what are going to be the requirements of the extensions that are going to depend on it.
+
+Since the ToolChain is a modular system it's interesting to favor flexbility and portability, so that the code can be easily be reusable for a variety of situations.
+
+But at the same time, simplicity should be a goal so that we can minimize the resources that are allocated, since the intended target are embedded systems that might not have too much resources available.
+
+\subsection {Transmission and reception}
+
+As previously indicated in section \ref{eth_firmware}, one possible way to manage the transmission of packages is offering an interface that copies from a given buffer to the current output descriptor buffer and another one that copies data from the current input descriptor buffer for reception.
+
+However, such a method forces a complete memory copying operation for the whole descriptor buffer, requiring that the complete data has to be available for the function before the function call and might force the need of intermediate variables in cases where the calculation of the data requires several steps that produce/consume it in fractions smaller than the size of the descriptor buffer, as it's the case with the lwIP network interface implementation.
+
+Instead, for the interface of this layer it has been decided that a more flexible method should be developed so that we can obtain a more efficient implementation for the lwIP network interface.
+
+The method that has been implemented is described in the following subsections.
+
+\subsubsection {Data transmission (output)}
+\label{eth_output}
+
+Instead of requiring the complete data to be already available in a variable that has later to be involved in a copy operation  ``hard-coded`` in the API offered by the ToolChain, the process of transmission has been split in 3 different steps to be followed for increasing the flexibility in the data generation and allowing a more efficient transmission of the data to be sent.
+
+\begin{itemize}
+  \item First, the address of the buffer from the current output descriptor is retrieved by calling the function ``ttc\_eth\_get\_output\_buffer``. This way we obtain the pointer that indicates where the data to be sent should be stored, with a maximum known size of \verb/MAX_ETH_PAYLOAD/ (which in the ethernet standard, as we know, has a value of 1500 bytes).
+  \item Once we know the direction that will be looked up for transmission, we can start filling this buffer with the data that we want to send. This can be done by either copying the data from a variable where it was previously calculated, or by calculating it now and storing the result of this processing directly in the buffer, without further memory
+  \item After the data has been prepared in the buffer, the function ``ttc\_eth\_send\_output\_buffer`` is to be called to set up the descriptor, give the control of it to DMA and switch to the next descriptor to be assigned as current output descriptor so that another frame can be queued for sending.
+\end{itemize}
+
+
+\subsubsection {Data reception (input)}
+\label{eth_input}
+
+Instead of performing a copy of the data from the current input descriptor buffer into a given variable, we can avoid this step entirelly by directly working with the address of the actual current input descript buffer.
+
+The processing of a received frame is then performed in three steps in a very similar way to how transmission occurred.
+
+\begin{itemize}
+  \item First, the address of the buffer from the current input descriptor is retrieved by calling the function ``\verb/ttc_eth_get_input_buffer/''. This way we obtain the pointer that indicates where the data to be read is located, as well as the size of the frame payload that has been received.
+  \item Now that we know where the data is, we can simply process it directly or copy it elsewhere if required or if the processing is so slow that it could block the descriptor for too long and an additional buffering layer is required.
+    
+  \item After the data has been treated accordingly, the function ``\verb/ttc_eth_resume_input/'' has to be called to so that the current descriptor is prepared to receive data again, give the control of it back to DMA and switch to the next descriptor to be assigned as current input descriptor so that another frame can be received and queued for processing.
+    Note that this function should be called also in the case the packet was dropped
+\end{itemize}
+
+\subsection {Architecture independent layer}
+\label{eth_arch}
+
+The ethernet extension was developed in concordance with other extensions in the ToolChain regarding I/O devices, and as such two sepparate source files were written: ``common/ttc\_ethernet.c'' and ``stm/stm32\_ethernet.c''.
+
+The first one interfaces directly with the firmware written by the MCD Application Team and employs code that is specific for the STM32 microcontroller architechture, offering functions for configuration, initialization and message management.
+
+The second one is a thin layer that wraps the architecture-specific functions so that, by means of C-preprocesor directives, the right functions for the corresponding architecture are called. In this case, onlt the STM32 architechture is supported.
+
+
+
