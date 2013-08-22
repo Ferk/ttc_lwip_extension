@@ -6,6 +6,9 @@
 # NOCOMPILE   do not compile or flash
 # NOLOG       do not spool compiler output into logfile (directly print to STDOUT)
 
+#TOOLCHAIN_URL="http://hlb-labor.de/projekte/cortexm3/"
+TOOLCHAIN_URL="http://thetoolchain.com"
+
 MAIN_C="$1"
 NOFLASH=""
 NOCOMPILE=""
@@ -65,7 +68,7 @@ fi
 Folder="ToolChain_STM32_${RequiredVersion}"
 if [ ! -d $Folder ]; then #{ download missing toolchain version
   echo "downloading $Folder.."
-  wget -c http://hlb-labor.de/projekte/cortexm3/archive/${Folder}.tar.bz
+  wget -c "${TOOLCHAIN_URL}/archive/${Folder}.tar.bz"
   tar xjf ${Folder}.tar.bz
   if [ -d ToolChain_STM32 ]; then
     mv ToolChain_STM32 ${Folder}
